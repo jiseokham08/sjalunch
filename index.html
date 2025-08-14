@@ -180,6 +180,18 @@
   </div>
 
   <script>
+/* --- image URL helpers --- */
+function normalizeDriveLink(u){
+  const s = String(u||'').trim();
+  // match Google Drive share or uc links
+  const m = s.match(/(?:\/file\/d\/|\bid=)([a-zA-Z0-9_-]{10,})/);
+  return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : s;
+}
+function isLikelyURL(u){
+  const s = String(u||'').trim();
+  return /^https?:\/\//.test(s) || /^data:image\//.test(s) || /\.(png|jpe?g|gif|webp|svg)$/i.test(s);
+}
+
     // ====== CONFIG ======
     // 1) Publish your Google Sheet (the 'menus' tab) to the web as CSV,
     // 2) Paste the CSV URL below (it should end with output=csv)
@@ -192,19 +204,6 @@
       const sep = base.includes('?') ? '&' : '?';
       return base + sep + 't=' + Date.now(); // cache-bust
     }
-    function isValidImgURL(u){
-      const s = (u||'').trim();
-      if(!s) return false;
-      // Allow http/https URLs, data URIs, or paths ending with common image extensions
-      return /^https?:\/\//.test(s) || /^data:image\//.test(s) || /\.(png|jpe?g|webp|gif|svg)$/i.test(s);
-    }
-    function normalizeDriveLink(u){
-      if(!u) return u;
-      // Convert Google Drive share links to direct-view links
-      const m = String(u).match(/https?:\/\/drive\.google\.com\/file\/d\/([^\/]+)/);
-      return m ? `https://drive.google.com/uc?export=view&id=${m[1]}` : u;
-    }
-
 
     // ====== i18n ======
     const STRINGS = {
@@ -313,7 +312,7 @@
         const row = data[cat] || null;
         const title = row ? row.title : "menu 1";
         const desc = row ? row.description : "";
-        const img  = row ? row.image_url : "";
+        const imgRaw = row ? row.image_url : ""; const img = normalizeDriveLink(imgRaw);
         const card = document.createElement("article");
         card.className = "card";
         card.style.animationDelay = (i*0.04)+"s";
